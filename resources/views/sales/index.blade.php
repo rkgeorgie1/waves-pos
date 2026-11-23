@@ -10,6 +10,15 @@
         font-size: 0.75rem;
         line-height: 1.3;
     }
+    @media (max-width: 1199.98px) {
+        .sales-compact-table {
+            min-width: 1200px;
+            table-layout: auto;
+        }
+        .sales-compact-table th {
+            white-space: nowrap;
+        }
+    }
     .sales-compact-table th,
     .sales-compact-table td {
         padding: 6px 4px !important;
@@ -44,20 +53,41 @@
     .editable-cell:hover {
         background: #f1f5f9 !important;
     }
+    .sales-filter-panel.is-closed {
+        display: none !important;
+    }
+    @media (max-width: 767.98px) {
+        .sales-filter-panel:not(.is-open) {
+            display: none !important;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+@php
+    $activeFilterCount = collect(request()->only([
+        'business_location', 'customer_id', 'payment_status',
+        'start_date', 'end_date', 'user_id', 'shipping_status', 'payment_method',
+    ]))->filter(fn ($value) => $value !== null && $value !== '')->count();
+@endphp
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h5 class="mb-0 fw-semibold">All Sales</h5>
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="filterPanelToggle" aria-expanded="true" aria-controls="salesFilterPanel">
+            <i class="bi bi-funnel me-1"></i><span id="filterPanelToggleLabel">Hide Filters</span>
+            @if($activeFilterCount > 0)
+                <span class="badge bg-primary rounded-pill ms-1">{{ $activeFilterCount }}</span>
+            @endif
+        </button>
         <a href="{{ route('sales.create') }}" class="btn btn-sm btn-primary">+ Add Sale</a>
         <a href="{{ route('pos') }}" class="btn btn-sm btn-outline-secondary">POS Terminal</a>
     </div>
 </div>
 
 <!-- Filters Card -->
-<div class="card p-3 mb-3">
+<div class="card p-3 mb-3 sales-filter-panel" id="salesFilterPanel">
     <form method="GET" action="{{ route('sales.index') }}">
         <div class="row g-2 align-items-end">
             <div class="col-md-3">
@@ -132,7 +162,7 @@
     </form>
 </div>
 
-<div class="card">
+<div class="card table-responsive">
     <table class="table table-hover table-bordered mb-0 sales-compact-table">
         <thead>
             <tr>
@@ -297,5 +327,31 @@ function openShippingModal(el) {
     document.getElementById('modalStaffNote').value = el.dataset.staff || '';
     new bootstrap.Modal(document.getElementById('shippingModal')).show();
 }
+
+(function () {
+    const toggle = document.getElementById('filterPanelToggle');
+    const panel = document.getElementById('salesFilterPanel');
+    const label = document.getElementById('filterPanelToggleLabel');
+    if (!toggle || !panel || !label) {
+        return;
+    }
+
+    let isOpen = window.innerWidth >= 768;
+
+    function renderFilterPanel() {
+        panel.classList.toggle('is-open', isOpen);
+        panel.classList.toggle('is-closed', !isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        toggle.classList.toggle('active', isOpen);
+        label.textContent = isOpen ? 'Hide Filters' : 'Filters';
+    }
+
+    toggle.addEventListener('click', function () {
+        isOpen = !isOpen;
+        renderFilterPanel();
+    });
+
+    renderFilterPanel();
+})();
 </script>
 @endpush

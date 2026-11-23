@@ -10,6 +10,15 @@
         font-size: 0.71rem;
         line-height: 1.2;
     }
+    @media (max-width: 1199.98px) {
+        .sales-compact-table {
+            min-width: 1200px;
+            table-layout: auto;
+        }
+        .sales-compact-table th {
+            white-space: nowrap;
+        }
+    }
     .sales-compact-table th,
     .sales-compact-table td {
         padding: 5px 4px !important;
@@ -44,12 +53,12 @@
 @endpush
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-2">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
     <h5 class="mb-0 fw-semibold">POS Sales</h5>
     <a href="{{ route('pos') }}" class="btn btn-sm btn-primary">+ Open POS</a>
 </div>
 
-<div class="card">
+<div class="card table-responsive">
     <table class="table table-hover table-bordered mb-0 sales-compact-table">
         <thead>
             <tr>

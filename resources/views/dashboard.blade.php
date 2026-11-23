@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Home - Airwaves ERP')
+@section('title', 'Home - Airwaves POS')
 
 @push('styles')
 <style>
@@ -64,7 +64,7 @@
         gap: 8px;
     }
     .upos-filter-btn {
-        background: linear-gradient(to right, #6366f1, #3b82f6);
+        background: #3b82f6;
         color: #ffffff;
         border: none;
         border-radius: 10px;
@@ -416,12 +416,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 datasets: [{
                     label: 'Total Sales (KSh)',
                     data: sales30,
-                    borderColor: '#4f46e5',
+                    borderColor: '#3b82f6',
                     backgroundColor: 'rgba(79, 70, 229, 0.1)',
                     fill: true,
                     tension: 0.35,
                     pointRadius: 3,
-                    pointBackgroundColor: '#4f46e5'
+                    pointBackgroundColor: '#3b82f6'
                 }]
             },
             options: {

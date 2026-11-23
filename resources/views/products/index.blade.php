@@ -11,7 +11,7 @@
 
 <!-- Filters Card -->
 <div class="card p-3 mb-3">
-    <form method="GET" action="{{ route('products.index') }}">
+    <form method="GET" action="{{ route('products.index') }}" data-auto-filter>
         <div class="row g-2 align-items-end">
             <div class="col-md-4">
                 <label class="form-label small fw-semibold text-muted mb-1">Search</label>

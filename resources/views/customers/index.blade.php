@@ -8,7 +8,7 @@
 </div>
 
 <div class="card p-3 mb-3">
-    <form method="GET" action="{{ route('customers.index') }}">
+    <form method="GET" action="{{ route('customers.index') }}" data-auto-filter>
         <div class="row g-2 align-items-end">
             <div class="col-md-6">
                 <label class="form-label small fw-semibold text-muted mb-1">Search</label>

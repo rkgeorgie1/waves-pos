@@ -2,7 +2,7 @@
 @section('title', 'Shipments')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h5 class="mb-0 fw-semibold">Shipments</h5>
     <a href="{{ route('sales.index') }}" class="btn btn-sm btn-outline-secondary">All Sales</a>
 </div>

@@ -2,6 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\AuditLog;
+use App\Models\Tenant;
+use App\Models\TenantContext;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -40,17 +44,63 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        $email = $this->string('email')->lower()->toString();
+        $user = User::whereRaw('lower(email) = ?', [$email])->first();
+
+        // Establish tenant context before Auth::attempt() and audit logging.
+        if ($user !== null) {
+            $tenant = Tenant::find($user->tenant_id);
+
+            if ($tenant !== null) {
+                app(TenantContext::class)->set($tenant);
+            }
+        }
+
+        $this->ensureUserIsNotLocked($user);
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+            $user?->recordFailedLogin();
+            AuditLog::record('auth.login_failed', $user, ['email' => $email]);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
 
+        if (! Auth::user()?->is_active) {
+            AuditLog::record('auth.login_blocked', Auth::user(), ['email' => $this->string('email')->lower()->toString()]);
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account is inactive. Please contact your administrator.',
+            ]);
+        }
+
+        Auth::user()?->clearLoginFailures();
+        AuditLog::record('auth.login', Auth::user());
         RateLimiter::clear($this->throttleKey());
+    }
+
+    /**
+     * Ensure the account is not temporarily locked after repeated failures.
+     *
+     * @throws ValidationException
+     */
+    private function ensureUserIsNotLocked(?User $user): void
+    {
+        if (! $user?->isLocked()) {
+            return;
+        }
+
+        AuditLog::record('auth.login_locked', $user);
+
+        throw ValidationException::withMessages([
+            'email' => 'This account is temporarily locked. Try again in '.$user->lockoutRemainingMinutes().' minutes.',
+        ]);
     }
 
     /**

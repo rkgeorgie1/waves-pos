@@ -13,7 +13,15 @@
         .paper { max-width: 760px; margin: 0 auto; background: #fff; padding: 20px 24px; border: 1px solid #ccc; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
         .brand { }
-        .brand img { max-height: 50px; }
+        .brand img {
+            display: block;
+            max-height: 50px;
+            max-width: 160px;
+            height: auto;
+            object-fit: contain;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
         .brand-name { font-size: 16px; font-weight: bold; }
         .brand-sub { font-size: 11px; color: #333; }
         .doc-title { text-align: right; }
@@ -38,6 +46,13 @@
 @php
     $settings = \App\Models\Setting::pluck('value', 'key');
     $businessName = $settings['business_name'] ?? 'Airwaves Wholesalers';
+    $logoPath = trim((string) ($settings['business_logo'] ?? ''));
+    $logoUrl = '';
+    if ($logoPath !== '') {
+        $logoUrl = str_starts_with($logoPath, 'http://') || str_starts_with($logoPath, 'https://')
+            ? $logoPath
+            : (str_starts_with($logoPath, '/') ? $logoPath : asset('storage/'.$logoPath));
+    }
 @endphp
 <div class="toolbar">
     <a href="{{ route('pos') }}" class="btn">POS</a>
@@ -47,8 +62,8 @@
 <div class="paper">
     <div class="header">
         <div class="brand">
-            @if(!empty($settings['business_logo']))
-                <img src="{{ asset('storage/'.$settings['business_logo']) }}" alt="Logo" style="max-height:40px;">
+            @if($logoUrl !== '')
+                <img src="{{ $logoUrl }}" alt="{{ $businessName }} logo">
             @else
                 <div class="brand-name">{{ $businessName }}</div>
             @endif
@@ -98,7 +113,20 @@
     <div class="footer">Goods received in good condition.</div>
 </div>
 <script>
-    window.addEventListener('load', function () { window.print(); });
+    window.addEventListener('load', function () {
+        var images = Array.prototype.slice.call(document.images);
+        Promise.all(images.map(function (image) {
+            if (image.complete) {
+                return Promise.resolve();
+            }
+            return new Promise(function (resolve) {
+                image.addEventListener('load', resolve, { once: true });
+                image.addEventListener('error', resolve, { once: true });
+            });
+        })).then(function () {
+            window.print();
+        });
+    });
 </script>
 </body>
 </html>

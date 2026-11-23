@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Sale;
+use App\Models\SaleItem;
+use App\Models\Setting;
 use App\Models\StockBalance;
+use App\Models\TenantContext;
 use App\Models\Warehouse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -19,7 +22,7 @@ class ReportController extends Controller
     {
         $dailySales = Sale::selectRaw('DATE(created_at) as d, SUM(total) as t, COUNT(*) as c')->groupBy('d')->orderByDesc('d')->limit(14)->get();
         $lowStock = StockBalance::with('product', 'warehouse')->whereColumn('quantity', '<=', DB::raw('0'))->get();
-        $topProducts = DB::table('sale_items')->select('product_name', DB::raw('SUM(quantity) as qty'), DB::raw('SUM(total) as revenue'))->groupBy('product_name')->orderByDesc('revenue')->limit(10)->get();
+        $topProducts = SaleItem::query()->select('product_name', DB::raw('SUM(quantity) as qty'), DB::raw('SUM(total) as revenue'))->groupBy('product_name')->orderByDesc('revenue')->limit(10)->get();
 
         return view('reports.index', compact('dailySales', 'lowStock', 'topProducts'));
     }
@@ -79,8 +82,10 @@ class ReportController extends Controller
         ];
 
         $warehouses = Warehouse::all();
+        $logoUrl = $this->reportLogoUrl();
+        $businessName = $this->reportBusinessName();
 
-        return view('reports.stock', compact('balances', 'summary', 'warehouses', 'warehouseId', 'status'));
+        return view('reports.stock', compact('balances', 'summary', 'warehouses', 'warehouseId', 'status', 'logoUrl', 'businessName'));
     }
 
     public function exportStock(Request $request)
@@ -123,8 +128,9 @@ class ReportController extends Controller
         $to = $request->get('to', now()->toDateString());
 
         $revenue = Sale::whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])->sum('total');
-        $cost = DB::table('sale_items')
+        $cost = SaleItem::query()
             ->join('products', 'products.id', '=', 'sale_items.product_id')
+            ->where('products.tenant_id', app(TenantContext::class)->id())
             ->whereBetween('sale_items.created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->selectRaw('SUM(sale_items.quantity * products.purchase_price) as c')
             ->value('c') ?? 0;
@@ -153,8 +159,9 @@ class ReportController extends Controller
         $to = $request->get('to', now()->toDateString());
 
         $revenue = Sale::whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])->sum('total');
-        $cost = DB::table('sale_items')
+        $cost = SaleItem::query()
             ->join('products', 'products.id', '=', 'sale_items.product_id')
+            ->where('products.tenant_id', app(TenantContext::class)->id())
             ->whereBetween('sale_items.created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->selectRaw('SUM(sale_items.quantity * products.purchase_price) as c')
             ->value('c') ?? 0;
@@ -173,6 +180,59 @@ class ReportController extends Controller
         $title = "Profit Report ({$from} to {$to})";
 
         return $this->exportTable($title, "profit_{$from}_to_{$to}", $headings, $rows, $request->get('format', 'csv'));
+    }
+
+    /**
+     * Resolve the public URL for the configured business logo.
+     */
+    protected function reportLogoUrl(): string
+    {
+        $logoPath = trim((string) (Setting::where('key', 'business_logo')->value('value') ?? ''));
+
+        if ($logoPath === '') {
+            return '';
+        }
+
+        if (preg_match('#^https?://#i', $logoPath) === 1) {
+            return $logoPath;
+        }
+
+        return str_starts_with($logoPath, '/') ? $logoPath : asset('storage/'.$logoPath);
+    }
+
+    protected function reportBusinessName(): string
+    {
+        $businessName = trim((string) (Setting::where('key', 'business_name')->value('value') ?? ''));
+
+        return $businessName !== '' ? $businessName : (string) config('app.name', 'Stock Report');
+    }
+
+    /**
+     * Build the branding used by PDF and Word exports.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function reportBranding(): array
+    {
+        $logoPath = trim((string) (Setting::where('key', 'business_logo')->value('value') ?? ''));
+        $logoDataUri = '';
+
+        if ($logoPath !== '' && preg_match('#^https?://#i', $logoPath) !== 1) {
+            $relativePath = ltrim($logoPath, '/');
+
+            if (str_starts_with($relativePath, 'storage/')) {
+                $relativePath = substr($relativePath, strlen('storage/'));
+            }
+
+            $fullPath = storage_path('app/public/'.$relativePath);
+
+            if (is_file($fullPath)) {
+                $mimeType = @mime_content_type($fullPath) ?: 'image/png';
+                $logoDataUri = 'data:'.$mimeType.';base64,'.base64_encode((string) file_get_contents($fullPath));
+            }
+        }
+
+        return [$logoDataUri, $this->reportBusinessName()];
     }
 
     protected function exportTable(string $title, string $baseName, array $headings, array $rows, string $format = 'csv')
@@ -196,14 +256,14 @@ class ReportController extends Controller
             return Excel::download($export, $baseName.'.xlsx');
         }
 
-        if ($format === 'pdf') {
-            $html = view('reports.export_pdf', compact('title', 'headings', 'rows'))->render();
+        if ($format === 'pdf' || $format === 'doc') {
+            [$logoDataUri, $businessName] = $this->reportBranding();
+            $view = $format === 'pdf' ? 'reports.export_pdf' : 'reports.export_doc';
+            $html = view($view, compact('title', 'headings', 'rows', 'logoDataUri', 'businessName'))->render();
 
-            return Pdf::loadHTML($html)->download($baseName.'.pdf');
-        }
-
-        if ($format === 'doc') {
-            $html = view('reports.export_doc', compact('title', 'headings', 'rows'))->render();
+            if ($format === 'pdf') {
+                return Pdf::loadHTML($html)->download($baseName.'.pdf');
+            }
 
             return response($html, 200, [
                 'Content-Type' => 'application/msword',

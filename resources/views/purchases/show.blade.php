@@ -1,13 +1,12 @@
 @extends('layouts.app')
-@section('title','Purchase')
-@section('content')
-@extends('layouts.app')
-@section('title','Purchase ' . $purchase->reference)
-
+@section('title', 'Purchase '.$purchase->reference)
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold mb-0">Purchase {{ $purchase->reference }}</h4>
-    <a href="{{ route('purchases.index') }}" class="btn btn-sm btn-outline-secondary">All Purchases</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('purchases.edit', $purchase) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+        <a href="{{ route('purchases.index') }}" class="btn btn-sm btn-outline-secondary">All Purchases</a>
+    </div>
 </div>
 
 <div class="card p-3 mb-3">
@@ -62,5 +61,4 @@
         @endif
     </div>
 </div>
-@endsection
 @endsection

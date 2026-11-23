@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\PlanLimits;
 use App\Models\Product;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\Supplier;
+use App\Models\TenantContext;
 use App\Models\Unit;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -41,12 +44,20 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, PlanLimits $limits)
     {
+        if (! $limits->allows('products')) {
+            return back()->withErrors([
+                'plan_limit' => 'Your plan allows '.$limits->limitFor('products').' products. Upgrade your plan to add more.',
+            ])->withInput();
+        }
+
+        $tenantId = app(TenantContext::class)->id();
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|unique:products,sku',
-            'barcode' => 'nullable|string|unique:products,barcode',
+            'sku' => ['nullable', 'string', Rule::unique('products', 'sku')->where('tenant_id', $tenantId)],
+            'barcode' => ['nullable', 'string', Rule::unique('products', 'barcode')->where('tenant_id', $tenantId)],
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',

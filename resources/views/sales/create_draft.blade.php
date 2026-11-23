@@ -31,10 +31,12 @@
         <input name="tax" type="number" step="0.01" class="form-control" value="0">
     </div>
 </div>
+<div class="table-responsive">
 <table class="table bg-white" id="items">
     <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th></th></tr></thead>
     <tbody></tbody>
 </table>
+</div>
 <div class="mb-3">
     <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">Add Item</button>
 </div>

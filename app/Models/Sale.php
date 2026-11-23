@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sale extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function customer(): BelongsTo

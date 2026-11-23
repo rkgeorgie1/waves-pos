@@ -12,6 +12,7 @@
         <strong>Paid:</strong> {{ number_format($summary['paid'],2) }}
     </div>
 </form>
+<div class="table-responsive">
 <table class="table table-striped bg-white">
     <thead><tr><th>Reference</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Status</th></tr></thead>
     <tbody>
@@ -20,6 +21,7 @@
     @endforeach
     </tbody>
 </table>
+</div>
 {{ $sales->links() }}
 <a href="{{ route('reports.export.sales') }}?from={{ $from }}&to={{ $to }}&format=csv" class="btn btn-success">CSV</a>
 <a href="{{ route('reports.export.sales') }}?from={{ $from }}&to={{ $to }}&format=xlsx" class="btn btn-primary">Excel</a>

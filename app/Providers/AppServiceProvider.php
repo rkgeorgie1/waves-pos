@@ -2,7 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Subscription;
+use App\Models\Tenant;
+use App\Models\TenantContext;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(TenantContext::class);
     }
 
     /**
@@ -19,6 +25,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Cashier::useCustomerModel(Tenant::class);
+        Cashier::useSubscriptionModel(Subscription::class);
+
+        Paginator::useBootstrapFive();
+
+        if (app()->isProduction()) {
+            URL::forceScheme('https');
+            Paginator::currentPathResolver(fn () => secure_url(request()->path()));
+        }
     }
 }

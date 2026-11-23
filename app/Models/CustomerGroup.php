@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomerGroup extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function customers(): HasMany

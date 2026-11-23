@@ -9,9 +9,16 @@
 
 <!-- Filters Card -->
 <div class="card p-3 mb-3">
-    <form method="GET" action="{{ route('purchases.index') }}">
+    <form method="GET" action="{{ route('purchases.index') }}" data-auto-filter>
         <div class="row g-2 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Reference / Supplier / Location..." value="{{ request('q') }}" autocomplete="off">
+                </div>
+            </div>
+            <div class="col-md-4">
                 <label class="form-label small fw-semibold text-muted mb-1">Date Range</label>
                 <div class="input-group input-group-sm">
                     <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
@@ -19,7 +26,7 @@
                     <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="form-label small fw-semibold text-muted mb-1">Supplier</label>
                 <select name="supplier_id" class="form-select form-select-sm">
                     <option value="">All Suppliers</option>
@@ -28,7 +35,7 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Payment Status</label>
                 <select name="payment_status" class="form-select form-select-sm">
                     <option value="">All</option>
@@ -37,7 +44,7 @@
                     <option value="due" {{ request('payment_status') === 'due' ? 'selected' : '' }}>Due</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small fw-semibold text-muted mb-1">Purchase Status</label>
                 <select name="status" class="form-select form-select-sm">
                     <option value="">All</option>
@@ -46,7 +53,7 @@
                     <option value="ordered" {{ request('status') === 'ordered' ? 'selected' : '' }}>Ordered</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
+            <div class="col-md-6 d-flex gap-2 justify-content-md-end">
                 <button type="submit" class="btn btn-primary btn-sm px-3">Filter</button>
                 <a href="{{ route('purchases.index') }}" class="btn btn-outline-secondary btn-sm px-3">Clear</a>
             </div>
@@ -95,6 +102,7 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" style="font-size: 0.82rem;">
                                     <li><a class="dropdown-item py-1" href="{{ route('purchases.show', $p) }}"><i class="bi bi-eye me-2"></i>View</a></li>
+                                    <li><a class="dropdown-item py-1" href="{{ route('purchases.edit', $p) }}"><i class="bi bi-pencil-square me-2"></i>Edit</a></li>
                                     @if($p->status !== 'received')
                                         <li>
                                             <form method="POST" action="{{ route('purchases.receive', $p) }}">@csrf<button class="dropdown-item py-1 text-success"><i class="bi bi-check2-circle me-2"></i>Receive Goods</button></form>

@@ -6,5 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GoodsReceivedNote extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 }

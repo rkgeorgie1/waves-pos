@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
+use App\Http\Middleware\EnsureActiveSubscription;
+use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +17,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'permission' => EnsurePermission::class,
+            'tenant' => ResolveTenant::class,
+            'subscription' => EnsureActiveSubscription::class,
+            'platform' => EnsurePlatformAdmin::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: ['stripe/webhook']);
+        $middleware->append(AddSecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -66,8 +66,8 @@
     </div>
 </div>
 
-<div class="card p-3 mb-3">
-    <div class="d-flex justify-content-between align-items-center mb-2">
+<div class="card p-3 mb-3 table-responsive">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
         <h6 class="mb-0 fw-semibold">Sale Items</h6>
         <button type="button" class="btn btn-secondary btn-sm" onclick="addRow()">+ Add Item</button>
     </div>

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CashShift extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function cashRegister(): BelongsTo

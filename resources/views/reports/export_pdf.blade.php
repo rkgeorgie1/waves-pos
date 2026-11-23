@@ -3,19 +3,38 @@
 <style>
   @page { margin: 20px; }
   body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1f2937; }
-  .header { border-bottom: 2px solid #4f46e5; padding-bottom: 8px; margin-bottom: 12px; }
-  .header h1 { font-size: 16px; margin: 0; color: #4f46e5; }
-  .header .sub { font-size: 9px; color: #6b7280; margin-top: 2px; }
+  .header { border-bottom: 2px solid #3b82f6; padding-bottom: 10px; margin-bottom: 12px; }
+  .header-table { width: 100%; border-collapse: collapse; margin: 0; }
+  .header-table td { border: 0; padding: 0; background: transparent; vertical-align: middle; }
+  .header-brand { width: 55%; }
+  .header-brand img { display: block; max-height: 52px; max-width: 200px; }
+  .brand-name { font-size: 16px; font-weight: bold; color: #1d4ed8; }
+  .header-meta { text-align: right; }
+  .report-title { font-size: 13px; font-weight: bold; color: #111827; }
+  .header .sub { font-size: 9px; color: #6b7280; margin-top: 3px; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th { background: #4f46e5; color: #fff; padding: 6px; text-align: left; font-size: 9px; text-transform: uppercase; }
+  th { background: #3b82f6; color: #fff; padding: 6px; text-align: left; font-size: 9px; text-transform: uppercase; }
   td { border-bottom: 1px solid #e5e7eb; padding: 5px; }
   tr:nth-child(even) td { background: #f9fafb; }
   .footer { margin-top: 16px; font-size: 8px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 6px; }
 </style>
 </head><body>
   <div class="header">
-    <h1>Airwaves Wholesalers ERP</h1>
-    <div class="sub">{{ $title }} &nbsp;|&nbsp; Generated: {{ now()->format('d M Y H:i') }}</div>
+    <table class="header-table">
+      <tr>
+        <td class="header-brand">
+          @if(!empty($logoDataUri))
+            <img src="{{ $logoDataUri }}" alt="{{ $businessName }}">
+          @else
+            <div class="brand-name">{{ $businessName }}</div>
+          @endif
+        </td>
+        <td class="header-meta">
+          <div class="report-title">{{ $title }}</div>
+          <div class="sub">Generated: {{ now()->format('d M Y H:i') }}</div>
+        </td>
+      </tr>
+    </table>
   </div>
   <table>
     <thead><tr>@foreach($headings as $h)<th>{{ $h }}</th>@endforeach</tr></thead>

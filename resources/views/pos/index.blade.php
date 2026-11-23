@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'POS - Airwaves ERP')
+@section('title', 'POS - Airwaves POS')
 
 @push('styles')
 <style>
@@ -109,6 +109,13 @@
         font-size: 0.82rem;
         border-bottom: 1px solid #f3f4f6;
     }
+    .upos-cart-table .input-group {
+        flex-wrap: nowrap;
+    }
+    .upos-cart-table .input-group > .form-control {
+        min-width: 42px;
+        width: 100%;
+    }
 
     /* Left Card Bottom Totals Table */
     .upos-totals-box {
@@ -121,7 +128,7 @@
 
     /* Right Column Category & Brand Gradient Buttons + Product Grid */
     .upos-filter-btn {
-        background: linear-gradient(to right, #6366f1, #3b82f6);
+        background: #3b82f6;
         color: #ffffff;
         border: none;
         border-radius: 10px;
@@ -154,7 +161,7 @@
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     }
     .upos-product-box:hover {
-        border-color: #4f46e5;
+        border-color: #3b82f6;
         box-shadow: 0 4px 10px rgba(79, 70, 229, 0.12);
         transform: translateY(-1px);
     }
@@ -163,8 +170,8 @@
         height: 36px;
         margin: 0 auto 4px;
         border-radius: 8px;
-        background: #eef2ff;
-        color: #4f46e5;
+        background: #eff6ff;
+        color: #3b82f6;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -271,7 +278,7 @@
         color: #fff;
     }
     .upos-btn-recent {
-        background: linear-gradient(to right, #6366f1, #3b82f6);
+        background: #3b82f6;
         color: #ffffff;
         border: none;
         border-radius: 10px;
@@ -282,6 +289,116 @@
     .upos-btn-recent:hover {
         opacity: 0.95;
         color: #fff;
+    }
+
+    /* Mobile POS layout */
+    @media (max-width: 767.98px) {
+        .upos-topbar {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 12px;
+        }
+        .upos-topbar > div:first-child {
+            flex: 1 1 100%;
+        }
+        .upos-topbar #warehouse {
+            width: 100% !important;
+            max-width: 100%;
+        }
+        .upos-top-btn {
+            width: 30px;
+            height: 30px;
+        }
+        .upos-main {
+            padding: 8px;
+        }
+        .upos-card {
+            padding: 10px;
+        }
+        .upos-table-container {
+            overflow-x: auto;
+        }
+        .upos-cart-table {
+            min-width: 560px;
+        }
+        .upos-cart-table thead th,
+        .upos-cart-table tbody td {
+            padding: 6px 8px;
+        }
+        .upos-product-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .upos-product-box {
+            min-height: 96px;
+        }
+        .upos-footer {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            padding: 8px 10px 10px;
+        }
+        .upos-footer-summary {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .upos-footer-summary .fs-5 {
+            font-size: 0.9rem !important;
+            line-height: 1.2;
+        }
+        .upos-footer-summary .upos-btn-recent {
+            padding: 5px 8px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+        }
+        .upos-footer-actions {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            align-items: stretch;
+        }
+        .upos-footer-actions > button {
+            width: 100%;
+            min-height: 36px;
+            margin: 0;
+            padding: 6px 4px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+            justify-content: center;
+        }
+        .upos-footer-actions .upos-action-link {
+            flex-direction: row;
+            gap: 4px;
+        }
+        .upos-footer-actions .upos-action-link i {
+            margin-bottom: 0;
+        }
+        .upos-footer-actions .upos-btn-cash { order: 1; }
+        .upos-footer-actions .upos-btn-mpesa { order: 2; }
+        .upos-footer-actions .upos-btn-multipipay { order: 3; }
+        .upos-footer-actions .upos-action-quotation { order: 4; }
+        .upos-footer-actions #holdBtn { order: 5; }
+        .upos-footer-actions .upos-btn-cancel { order: 6; }
+
+        /* Let the whole POS screen scroll down to the footer on phones */
+        main.p-4 {
+            height: auto !important;
+            min-height: 100dvh;
+            overflow: visible !important;
+        }
+        .upos-product-grid {
+            overflow: visible !important;
+            min-height: auto;
+        }
+        .upos-footer {
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+        }
     }
 </style>
 @endpush
@@ -443,10 +560,10 @@
 
 <!-- Fixed Bottom Footer Bar (waves.riset42.com style) -->
 <div class="upos-footer">
-    <div class="d-flex flex-wrap align-items-center gap-2">
-        <button type="button" class="upos-action-link" onclick="saveAsQuotation()">
+    <div class="upos-footer-actions d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="upos-action-link upos-action-quotation" onclick="saveAsQuotation()">
             <i class="bi bi-file-earmark-text text-warning"></i>
-            <span>Quotation</span>
+            <span class="d-none d-md-inline">Quotation</span><span class="d-md-none">Quote</span>
         </button>
 
         <button id="holdBtn" type="button" class="upos-action-link">
@@ -455,7 +572,7 @@
         </button>
 
         <button type="button" class="upos-btn-multipipay" onclick="openPayModal()">
-            <i class="bi bi-cash-stack me-1"></i> Multiple Pay
+            <i class="bi bi-cash-stack me-1"></i><span class="d-none d-md-inline">Multiple Pay</span><span class="d-md-none">Multi Pay</span>
         </button>
 
         <button type="button" class="upos-btn-mpesa" onclick="quickPay('mpesa')">
@@ -471,13 +588,13 @@
         </button>
     </div>
 
-    <div class="d-flex align-items-center gap-4">
+    <div class="upos-footer-summary d-flex align-items-center gap-4">
         <div class="fs-5 fw-bold text-dark">
             Total Payable: <span class="text-success">KSh <span id="total">0.00</span></span>
         </div>
 
         <button type="button" class="upos-btn-recent" data-bs-toggle="modal" data-bs-target="#recentTransactionsModal">
-            <i class="bi bi-clock-history me-1"></i> Recent Transactions
+            <i class="bi bi-clock-history me-1"></i><span class="d-none d-md-inline">Recent Transactions</span><span class="d-md-none">Recent</span>
         </button>
     </div>
 </div>

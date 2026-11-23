@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Airwaves Wholesalers ERP')</title>
+    <title>@yield('title', 'Airwaves POS')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="theme-color" content="#4f46e5">
     <style>
         body {
             background: #f3f4f6;
@@ -34,8 +38,44 @@
             .sidebar.show { transform: translateX(0); }
             .main-content-wrapper { margin-left: 0 !important; }
             .mobile-toggle { display: inline-flex !important; }
+            .sidebar { height: 100dvh; }
+            .sidebar-backdrop {
+                display: block !important;
+                position: fixed;
+                inset: 0;
+                background: rgba(17, 24, 39, 0.45);
+                z-index: 99;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity .2s ease, visibility .2s ease;
+            }
+            .sidebar-backdrop.show {
+                opacity: 1;
+                visibility: visible;
+            }
         }
+        @media (max-width: 575.98px) {
+            .navbar-upos { padding: 0 10px; }
+            .navbar-upos .ms-auto { gap: 4px !important; }
+            .navbar-upos .fw-semibold.ms-2 { display: none; }
+            .upos-pos-pill { padding: 6px 9px; }
+            .upos-header-btn { padding: 6px 9px; font-size: 0.76rem; }
+            main.p-4 { padding: 12px !important; }
+            .table { font-size: 0.78rem; }
+            .table > :not(caption) > * > * { padding: 0.4rem 0.5rem; }
+        }
+        .sidebar-backdrop { display: none; }
         .mobile-toggle { display: none; }
+        .mobile-toggle {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            color: #ffffff;
+        }
+        .mobile-toggle:hover, .mobile-toggle:focus {
+            background: rgba(255, 255, 255, 0.28);
+            border-color: #ffffff;
+            color: #ffffff;
+        }
         .container-fluid {
             height: 100vh;
             overflow: hidden;
@@ -98,8 +138,8 @@
             color: #111827;
         }
         .sidebar a.active {
-            background: #eef2ff;
-            color: #4f46e5;
+            background: #eff6ff;
+            color: #3b82f6;
             font-weight: 600;
         }
         .sidebar .collapse a {
@@ -108,8 +148,8 @@
             color: #6b7280;
         }
         .sidebar .collapse a.active {
-            background: #eef2ff;
-            color: #4f46e5;
+            background: #eff6ff;
+            color: #3b82f6;
         }
         .sidebar .bi-chevron-down {
             transition: transform .2s ease;
@@ -122,7 +162,7 @@
         /* UltimatePOS v6 Indigo-to-Blue Gradient Top Navbar */
         .navbar-upos {
             height: 60px;
-            background: linear-gradient(to right, #6366f1, #3b82f6);
+            background: #3b82f6;
             padding: 0 20px;
             display: flex;
             align-items: center;
@@ -150,7 +190,7 @@
         }
         .upos-pos-pill {
             background: #ffffff;
-            color: #4f46e5;
+            color: #3b82f6;
             border-radius: 10px;
             padding: 6px 14px;
             font-size: 0.82rem;
@@ -162,14 +202,46 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
         }
         .upos-pos-pill:hover {
-            background: #eef2ff;
-            color: #4338ca;
+            background: #eff6ff;
+            color: #1d4ed8;
         }
         .card {
             border: 1px solid #e5e7eb;
             border-radius: 16px;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
             background: #ffffff;
+        }
+
+        /* Mobile: scroll the document itself so the last row is always reachable */
+        @media (max-width: 767.98px) {
+            html, body {
+                height: auto !important;
+                min-height: 100%;
+                overflow: visible !important;
+            }
+            .container-fluid {
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .container-fluid > .row {
+                display: block;
+            }
+            .main-content-wrapper {
+                height: auto !important;
+                min-height: 100dvh;
+                overflow: visible !important;
+                padding-bottom: 24px;
+            }
+            .sidebar {
+                position: fixed !important;
+                height: 100dvh !important;
+                overflow-y: auto !important;
+            }
+            .navbar-upos {
+                position: sticky;
+                top: 0;
+                z-index: 50;
+            }
         }
     </style>
     @stack('styles')
@@ -184,7 +256,7 @@
                     @if($sidebarLogo)
                         <img src="{{ asset('storage/'.$sidebarLogo) }}" alt="Logo" style="max-height:32px; max-width:120px;">
                     @else
-                        Airwaves ERP
+                        Airwaves POS
                     @endif
                 </span>
             </div>
@@ -274,6 +346,11 @@
                 </div>
                 <a href="{{ route('reports.index') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="bi bi-bar-chart-line me-2"></i>Reports</a>
 
+                @if(auth()->user()?->is_platform_admin)
+                    <a href="{{ route('platform.dashboard') }}" class="{{ request()->routeIs('platform.*') ? 'active' : '' }}"><i class="bi bi-cloud me-2"></i>Platform Console</a>
+                @endif
+                <a href="{{ route('billing.index') }}" class="{{ request()->routeIs('billing.*') ? 'active' : '' }}"><i class="bi bi-credit-card me-2"></i>Billing &amp; Plans</a>
+
                 <a href="#settingsDropdown" data-bs-toggle="collapse" role="button" aria-expanded="{{ $settingsMenuOpen ? 'true' : 'false' }}" aria-controls="settingsDropdown" class="d-flex align-items-center justify-content-between {{ $settingsMenuOpen ? 'active' : '' }}">
                     <span><i class="bi bi-gear me-2"></i>Settings</span>
                     <i class="bi bi-chevron-down"></i>
@@ -285,9 +362,11 @@
                     <a href="{{ route('settings.currencies') }}" class="{{ request()->routeIs('settings.currencies') ? 'active' : '' }}">Currencies</a>
                     <a href="{{ route('settings.warehouses') }}" class="{{ request()->routeIs('settings.warehouses') ? 'active' : '' }}">Warehouses</a>
                     <a href="{{ route('settings.access') }}" class="{{ request()->routeIs('settings.access') ? 'active' : '' }}">Access Management</a>
+                    <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">My Account</a>
                 </div>
             </nav>
         </div>
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
         <div class="main-content-wrapper">
             <div class="col-md-10 p-0">
                 <nav class="navbar-upos">
@@ -296,7 +375,7 @@
                         <i class="bi bi-calendar3"></i> {{ now()->format('d/m/Y') }}
                     </span>
                 </div>
-                <button class="btn btn-sm btn-outline-secondary mobile-toggle me-2" type="button" onclick="document.getElementById('appSidebar').classList.toggle('show')">
+                <button class="btn btn-sm btn-outline-secondary mobile-toggle me-2" id="mobileSidebarToggle" type="button" aria-label="Toggle navigation">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="ms-auto d-flex align-items-center gap-2">
@@ -313,6 +392,9 @@
                                 {{ auth()->user()->unreadNotificationsCount() }}
                             </span>
                         @endif
+                    </a>
+                    <a href="{{ route('profile.edit') }}" class="upos-header-btn" title="Account settings">
+                        <i class="bi bi-person-circle"></i><span class="d-none d-md-inline ms-1">Account</span>
                     </a>
                     <span class="fw-semibold ms-2">{{ auth()->user()->name ?? '' }}</span>
                     <form method="POST" action="{{ route('logout') }}" class="m-0">@csrf
@@ -334,6 +416,136 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+    }
+
+    (function () {
+        const sidebar = document.getElementById('appSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const toggle = document.getElementById('mobileSidebarToggle');
+        const storageKey = 'posSidebarOpen';
+
+        function setSidebar(open) {
+            sidebar.classList.toggle('show', open);
+            backdrop.classList.toggle('show', open);
+            try {
+                sessionStorage.setItem(storageKey, open ? '1' : '0');
+            } catch (error) {
+                // Storage may be unavailable in private browsing.
+            }
+        }
+
+        let wasOpen = false;
+        try {
+            wasOpen = sessionStorage.getItem(storageKey) === '1';
+        } catch (error) {
+            // Storage may be unavailable in private browsing.
+        }
+        if (wasOpen) {
+            sidebar.classList.add('show');
+            backdrop.classList.add('show');
+        }
+
+        toggle?.addEventListener('click', function () {
+            setSidebar(!sidebar.classList.contains('show'));
+        });
+        backdrop?.addEventListener('click', function () {
+            setSidebar(false);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                setSidebar(false);
+            }
+        });
+    })();
+
+    (function () {
+        const forms = document.querySelectorAll('form[data-auto-filter]');
+        const debounceMs = 350;
+
+        if (! forms.length) {
+            return;
+        }
+
+        let debounceTimer = null;
+
+        forms.forEach(function (form) {
+            const focusKey = 'posAutoFilter:' + form.getAttribute('action');
+
+            function submitForm() {
+                clearTimeout(debounceTimer);
+
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                    return;
+                }
+
+                form.submit();
+            }
+
+            form.addEventListener('input', function (event) {
+                const field = event.target;
+
+                if (! (field instanceof HTMLInputElement)) {
+                    return;
+                }
+
+                const caretFields = ['text', 'search', 'tel', 'url', 'email', 'password'];
+
+                if (caretFields.includes(field.type) && field.name) {
+                    try {
+                        sessionStorage.setItem(focusKey, JSON.stringify({
+                            name: field.name,
+                            start: field.selectionStart,
+                            end: field.selectionEnd,
+                        }));
+                    } catch (error) {
+                        // Storage may be unavailable in private browsing.
+                    }
+                }
+
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(submitForm, debounceMs);
+            });
+
+            form.addEventListener('change', function (event) {
+                const field = event.target;
+                const isAutoSubmitField = field instanceof HTMLSelectElement
+                    || (field instanceof HTMLInputElement && ['date', 'checkbox', 'radio'].includes(field.type));
+
+                if (isAutoSubmitField) {
+                    submitForm();
+                }
+            });
+
+            form.addEventListener('submit', function () {
+                clearTimeout(debounceTimer);
+            });
+
+            try {
+                const state = JSON.parse(sessionStorage.getItem(focusKey) || 'null');
+                sessionStorage.removeItem(focusKey);
+
+                if (state && state.name) {
+                    const field = form.elements.namedItem(state.name);
+
+                    if (field && typeof field.focus === 'function') {
+                        field.focus();
+
+                        if (typeof field.setSelectionRange === 'function' && state.start !== null) {
+                            field.setSelectionRange(state.start, state.end ?? state.start);
+                        }
+                    }
+                }
+            } catch (error) {
+                // Storage may be unavailable in private browsing.
+            }
+        });
+    })();
+</script>
 @stack('scripts')
+<x-whatsapp-float />
 </body>
 </html>

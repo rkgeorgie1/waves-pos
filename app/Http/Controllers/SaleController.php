@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
@@ -12,10 +13,12 @@ use App\Models\SaleItem;
 use App\Models\Setting;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
+use App\Models\TenantContext;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -112,6 +115,13 @@ class SaleController extends Controller
                 'sold_at' => now(),
             ]);
 
+            AuditLog::record('sale.created', $sale, [
+                'reference' => $sale->reference,
+                'type' => 'retail',
+                'total' => $total,
+                'warehouse_id' => (int) $data['warehouse_id'],
+            ]);
+
             foreach ($data['items'] as $it) {
                 $product = Product::find($it['product_id']);
                 SaleItem::create([
@@ -125,9 +135,7 @@ class SaleController extends Controller
                     'total' => ($it['quantity'] * $it['unit_price']) - ($it['discount'] ?? 0),
                 ]);
 
-                $bal = StockBalance::firstOrCreate(['product_id' => $product->id, 'warehouse_id' => $data['warehouse_id']], ['quantity' => 0, 'avg_cost' => 0]);
-                $bal->quantity -= $it['quantity'];
-                $bal->save();
+                $bal = $this->deductStock($product, (int) $data['warehouse_id'], (float) $it['quantity']);
 
                 StockMovement::create([
                     'product_id' => $product->id,
@@ -290,9 +298,8 @@ class SaleController extends Controller
 
             foreach ($sale->items as $it) {
                 $product = Product::find($it->product_id);
-                $bal = StockBalance::firstOrCreate(['product_id' => $product->id, 'warehouse_id' => $sale->warehouse_id], ['quantity' => 0, 'avg_cost' => 0]);
-                $bal->quantity -= $it->quantity;
-                $bal->save();
+                $bal = $this->deductStock($product, (int) $sale->warehouse_id, (float) $it->quantity);
+
                 StockMovement::create([
                     'product_id' => $product->id,
                     'warehouse_id' => $sale->warehouse_id,
@@ -326,6 +333,12 @@ class SaleController extends Controller
             $sale->payment_status = ($paid >= $sale->total) ? 'paid' : 'partial';
             $sale->reference = str_replace('HLD-', 'SAL-', $sale->reference);
             $sale->save();
+
+            AuditLog::record('sale.completed', $sale, [
+                'reference' => $sale->reference,
+                'paid' => $paid,
+                'total' => (float) $sale->total,
+            ]);
 
             if ($sale->customer_id) {
                 $customer = Customer::find($sale->customer_id);
@@ -368,7 +381,9 @@ class SaleController extends Controller
 
         $warehouses = Warehouse::orderBy('name')->get();
         $customers = Customer::orderBy('name')->get();
-        $users = User::orderBy('name')->get();
+        $users = User::where('tenant_id', app(TenantContext::class)->id())
+            ->orderBy('name')
+            ->get();
 
         return view('sales.index', compact('sales', 'warehouses', 'customers', 'users'));
     }
@@ -433,6 +448,13 @@ class SaleController extends Controller
                 'sold_at' => now(),
             ]);
 
+            AuditLog::record('sale.created', $sale, [
+                'reference' => $sale->reference,
+                'type' => 'direct',
+                'total' => $total,
+                'warehouse_id' => (int) $data['warehouse_id'],
+            ]);
+
             foreach ($data['items'] as $it) {
                 $product = Product::find($it['product_id']);
                 SaleItem::create([
@@ -446,12 +468,7 @@ class SaleController extends Controller
                     'total' => $it['quantity'] * $it['unit_price'],
                 ]);
 
-                $bal = StockBalance::firstOrCreate(
-                    ['product_id' => $product->id, 'warehouse_id' => $data['warehouse_id']],
-                    ['quantity' => 0, 'avg_cost' => 0]
-                );
-                $bal->quantity -= $it['quantity'];
-                $bal->save();
+                $bal = $this->deductStock($product, (int) $data['warehouse_id'], (float) $it['quantity']);
 
                 StockMovement::create([
                     'product_id' => $product->id,
@@ -695,5 +712,27 @@ class SaleController extends Controller
         $settings = Setting::pluck('value', 'key');
 
         return view('sales.delivery_note', compact('sale', 'settings'));
+    }
+
+    /**
+     * Lock the stock row and deduct the sold quantity, refusing overselling.
+     */
+    private function deductStock(Product $product, int $warehouseId, float $quantity): StockBalance
+    {
+        $balance = StockBalance::where('product_id', $product->id)
+            ->where('warehouse_id', $warehouseId)
+            ->lockForUpdate()
+            ->first();
+
+        if ($balance === null || (float) $balance->quantity < $quantity) {
+            throw ValidationException::withMessages([
+                'items' => "Insufficient stock for {$product->name}.",
+            ]);
+        }
+
+        $balance->quantity = (float) $balance->quantity - $quantity;
+        $balance->save();
+
+        return $balance;
     }
 }

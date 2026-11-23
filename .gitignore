@@ -25,3 +25,10 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/deploy.zip
+/deploy.tar.gz
+/idx.php
+/minimal.php
+/testphp.php
+/reorganize.php
+/phpdesktop/

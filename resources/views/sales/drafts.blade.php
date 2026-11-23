@@ -1,10 +1,11 @@
 @extends('layouts.app')
 @section('title','List Drafts')
 @section('content')
-<div class="d-flex justify-content-between mb-3">
-    <h4>Drafts</h4>
+<div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
+    <h4 class="mb-0">Drafts</h4>
     <a href="{{ route('sales.drafts.create') }}" class="btn btn-primary">Add Draft</a>
 </div>
+<div class="table-responsive">
 <table class="table bg-white">
     <thead><tr><th>Ref</th><th>Customer</th><th>Status</th><th>Total</th><th>Date</th><th></th></tr></thead>
     <tbody>
@@ -22,5 +23,6 @@
     @endforeach
     </tbody>
 </table>
+</div>
 {{ $drafts->links() }}
 @endsection

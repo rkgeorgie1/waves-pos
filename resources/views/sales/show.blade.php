@@ -100,7 +100,7 @@
         <div class="col-md-6">
             <h6 class="small fw-semibold text-uppercase text-muted mb-2">Payments Recorded</h6>
             @if($sale->payments && $sale->payments->count() > 0)
-                <table class="table table-sm table-bordered mb-0" style="max-width: 360px;">
+                <table class="table table-sm table-bordered mb-0" style="max-width: 100%;">
                     <thead class="table-light">
                         <tr>
                             <th>Reference</th>

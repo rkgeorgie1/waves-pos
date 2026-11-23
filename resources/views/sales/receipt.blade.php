@@ -63,6 +63,17 @@
             font-weight: bold;
             margin: 0 0 2px;
         }
+        .receipt-logo {
+            display: block;
+            width: 100%;
+            max-width: 120px;
+            max-height: 48px;
+            height: auto;
+            margin: 0 auto 5px;
+            object-fit: contain;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
         .store-line {
             font-size: 11px;
             margin: 1px 0;
@@ -158,6 +169,14 @@
     $footerNote = $settings['receipt_footer_note'] ?? 'Goods once sold are subject to company return policy.';
     $thankYou = $settings['receipt_thank_you'] ?? 'Thank you for shopping with us.';
 
+    $logoPath = trim((string) ($settings['business_logo'] ?? ''));
+    $logoUrl = '';
+    if ($logoPath !== '') {
+        $logoUrl = str_starts_with($logoPath, 'http://') || str_starts_with($logoPath, 'https://')
+            ? $logoPath
+            : (str_starts_with($logoPath, '/') ? $logoPath : asset('storage/'.$logoPath));
+    }
+
     $subtotal = (float) ($sale->subtotal ?: $sale->items->sum('total'));
     $discount = (float) $sale->discount;
     $tax = (float) $sale->tax;
@@ -175,8 +194,8 @@
 
 <div class="receipt-paper">
     <div class="text-center">
-        @if(!empty($settings['business_logo']))
-            <img src="{{ asset('storage/'.$settings['business_logo']) }}" alt="Logo" style="max-height:40px; margin-bottom:4px;">
+        @if($logoUrl !== '')
+            <img class="receipt-logo" src="{{ $logoUrl }}" alt="{{ $businessName }} logo">
         @else
             <div class="store-name">{{ $businessName }}</div>
         @endif
@@ -316,7 +335,18 @@
 @if($autoPrint)
 <script>
     window.addEventListener('load', function () {
-        window.print();
+        var images = Array.prototype.slice.call(document.images);
+        Promise.all(images.map(function (image) {
+            if (image.complete) {
+                return Promise.resolve();
+            }
+            return new Promise(function (resolve) {
+                image.addEventListener('load', resolve, { once: true });
+                image.addEventListener('error', resolve, { once: true });
+            });
+        })).then(function () {
+            window.print();
+        });
     });
 </script>
 @endif

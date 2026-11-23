@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\Permission;
+use App\Models\PlanLimits;
 use App\Models\Role;
 use App\Models\Setting;
+use App\Models\TenantContext;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SettingController extends Controller
 {
@@ -91,8 +95,17 @@ class SettingController extends Controller
 
     public function update(Request $r)
     {
+        $oldValues = [];
+        $newValues = [];
+
         foreach ($r->except('_token') as $key => $value) {
+            $oldValues[$key] = Setting::where('key', $key)->value('value');
             Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => 'general']);
+            $newValues[$key] = $value;
+        }
+
+        if ($newValues !== []) {
+            AuditLog::record('settings.updated', newValues: $newValues, oldValues: $oldValues);
         }
 
         return back()->with('success', 'System settings updated.');
@@ -103,6 +116,7 @@ class SettingController extends Controller
         $r->validate(['logo' => 'required|image|max:2048']);
         $path = $r->file('logo')->store('logos', 'public');
         Setting::updateOrCreate(['key' => 'business_logo'], ['value' => $path, 'group' => 'business']);
+        AuditLog::record('settings.logo_uploaded', newValues: ['path' => $path]);
 
         return back()->with('success', 'Logo uploaded.');
     }
@@ -113,6 +127,7 @@ class SettingController extends Controller
         if ($path) {
             Storage::disk('public')->delete($path);
             Setting::where('key', 'business_logo')->delete();
+            AuditLog::record('settings.logo_removed', oldValues: ['path' => $path]);
         }
 
         return back()->with('success', 'Logo removed.');
@@ -120,20 +135,29 @@ class SettingController extends Controller
 
     public function staff()
     {
-        $users = User::with('role')->latest()->get();
+        $users = User::with('role')
+            ->where('tenant_id', app(TenantContext::class)->id())
+            ->latest()
+            ->get();
         $roles = Role::orderBy('name')->get();
         $employees = Employee::latest()->get()->keyBy('user_id');
 
         return view('settings.staff', compact('users', 'roles', 'employees'));
     }
 
-    public function storeStaff(Request $r)
+    public function storeStaff(Request $r, PlanLimits $limits)
     {
+        if (! $limits->allows('users')) {
+            return back()->withErrors([
+                'plan_limit' => 'Your plan allows '.$limits->limitFor('users').' users. Upgrade your plan to add more staff.',
+            ])->withInput();
+        }
+
         $data = $r->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role_id' => 'required|exists:roles,id',
+            'role_id' => ['required', Rule::exists('roles', 'id')->where('tenant_id', app(TenantContext::class)->id())],
             'phone' => 'nullable|string|max:50',
             'department' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
@@ -161,13 +185,26 @@ class SettingController extends Controller
             'is_active' => true,
         ]);
 
+        AuditLog::record('staff.created', $user, [
+            'email' => $user->email,
+            'role_id' => $user->role_id,
+        ]);
+
         return back()->with('success', 'Staff member added.');
     }
 
     public function toggleStaff(User $user)
     {
+        $previousState = $user->is_active;
         $user->is_active = ! $user->is_active;
         $user->save();
+
+        AuditLog::record(
+            'staff.toggle',
+            $user,
+            ['is_active' => $user->is_active],
+            ['is_active' => $previousState],
+        );
 
         return back()->with('success', 'Staff status updated.');
     }
@@ -247,8 +284,14 @@ class SettingController extends Controller
         return view('settings.warehouses', ['warehouses' => Warehouse::orderBy('name')->get()]);
     }
 
-    public function storeWarehouse(Request $r)
+    public function storeWarehouse(Request $r, PlanLimits $limits)
     {
+        if (! $limits->allows('warehouses')) {
+            return back()->withErrors([
+                'plan_limit' => 'Your plan allows '.$limits->limitFor('warehouses').' warehouses. Upgrade your plan to add more.',
+            ])->withInput();
+        }
+
         $data = $r->validate([
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
@@ -320,12 +363,14 @@ class SettingController extends Controller
             'description' => 'nullable|string|max:255',
         ]);
 
-        Role::create([
+        $role = Role::create([
             'name' => $data['name'],
             'slug' => Str::slug($data['name']),
             'description' => $data['description'] ?? null,
             'is_system' => false,
         ]);
+
+        AuditLog::record('role.created', $role, ['name' => $role->name, 'slug' => $role->slug]);
 
         return back()->with('success', 'Role created.');
     }
@@ -337,11 +382,13 @@ class SettingController extends Controller
             'module' => 'nullable|string|max:100',
         ]);
 
-        Permission::create([
+        $permission = Permission::create([
             'name' => $data['name'],
             'slug' => Str::slug($data['name']),
             'module' => $data['module'] ?? 'General',
         ]);
+
+        AuditLog::record('permission.created', $permission, ['name' => $permission->name, 'slug' => $permission->slug]);
 
         return back()->with('success', 'Permission created.');
     }
@@ -350,10 +397,26 @@ class SettingController extends Controller
     {
         $data = $r->validate([
             'permissions' => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => [Rule::exists('permissions', 'id')->where('tenant_id', app(TenantContext::class)->id())],
         ]);
 
-        $role->permissions()->sync($data['permissions'] ?? []);
+        $tenantId = app(TenantContext::class)->id();
+        $permissions = collect($data['permissions'] ?? [])
+            ->mapWithKeys(fn (int $permissionId): array => [
+                $permissionId => ['tenant_id' => $tenantId],
+            ])
+            ->all();
+
+        $oldPermissions = $role->permissions()->pluck('permissions.id')->all();
+        $role->permissions()->sync($permissions);
+        $newPermissions = $role->permissions()->pluck('permissions.id')->all();
+
+        AuditLog::record(
+            'role.permissions_synced',
+            $role,
+            ['permissions' => $newPermissions],
+            ['permissions' => $oldPermissions],
+        );
 
         return back()->with('success', "Permissions updated for {$role->name}.");
     }

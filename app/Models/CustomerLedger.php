@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerLedger extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'customer_ledger';
 
     protected $guarded = [];

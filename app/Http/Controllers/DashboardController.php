@@ -9,9 +9,12 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseReturn;
 use App\Models\Sale;
+use App\Models\SaleItem;
 use App\Models\SalesReturn;
 use App\Models\Setting;
+use App\Models\StockBalance;
 use App\Models\Supplier;
+use App\Models\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -28,6 +31,7 @@ class DashboardController extends Controller
             default => now()->startOfMonth(),
         };
         $end = $period === 'yesterday' ? now()->subDay()->endOfDay() : now()->endOfDay();
+        $tenantId = app(TenantContext::class)->id();
 
         $currency = Setting::where('key', 'currency')->value('value') ?? 'KSh';
 
@@ -51,13 +55,15 @@ class DashboardController extends Controller
         $totalCustomers = Customer::count();
         $totalSuppliers = Supplier::count();
 
-        $lowStockCount = DB::table('stock_balances')
+        $lowStockCount = StockBalance::query()
             ->join('products', 'products.id', '=', 'stock_balances.product_id')
+            ->where('products.tenant_id', $tenantId)
             ->whereColumn('stock_balances.quantity', '<=', 'products.min_stock_level')
             ->count();
 
-        $lowStockItems = DB::table('stock_balances')
+        $lowStockItems = StockBalance::query()
             ->join('products', 'products.id', '=', 'stock_balances.product_id')
+            ->where('products.tenant_id', $tenantId)
             ->leftJoin('warehouses', 'warehouses.id', '=', 'stock_balances.warehouse_id')
             ->select(
                 'products.id',
@@ -74,8 +80,9 @@ class DashboardController extends Controller
 
         $customerDebt = Customer::sum('balance');
         $supplierDebt = Supplier::sum('balance');
-        $inventoryValue = DB::table('stock_balances')
+        $inventoryValue = StockBalance::query()
             ->join('products', 'products.id', '=', 'stock_balances.product_id')
+            ->where('products.tenant_id', $tenantId)
             ->selectRaw('SUM(stock_balances.quantity * products.purchase_price) as v')
             ->value('v') ?? 0;
 
@@ -92,7 +99,7 @@ class DashboardController extends Controller
             ->get();
 
         $recentSales = Sale::with(['customer', 'warehouse'])->latest()->limit(8)->get();
-        $topProducts = DB::table('sale_items')
+        $topProducts = SaleItem::query()
             ->select('product_name', DB::raw('SUM(quantity) as qty'), DB::raw('SUM(total) as revenue'))
             ->groupBy('product_name')
             ->orderByDesc('revenue')

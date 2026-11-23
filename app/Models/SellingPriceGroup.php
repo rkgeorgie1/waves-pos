@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SellingPriceGroup extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function products(): BelongsToMany

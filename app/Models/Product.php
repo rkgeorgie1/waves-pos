@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function category(): BelongsTo

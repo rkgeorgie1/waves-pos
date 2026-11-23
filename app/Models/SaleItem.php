@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SaleItem extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function sale(): BelongsTo

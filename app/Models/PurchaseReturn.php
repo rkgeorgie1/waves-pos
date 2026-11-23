@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseReturn extends Model
 {
+    use BelongsToTenant;
+
     protected $guarded = [];
 
     public function supplier(): BelongsTo

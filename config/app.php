@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Seeded Administrator Credentials
+    |--------------------------------------------------------------------------
+    |
+    | Used only by DatabaseSeeder. Set SEED_ADMIN_PASSWORD before seeding a
+    | deployed instance; otherwise a random password is generated and shown.
+    |
+    */
+
+    'seed_admin_email' => env('SEED_ADMIN_EMAIL', 'admin@airwaves.co.ke'),
+
+    'seed_admin_password' => env('SEED_ADMIN_PASSWORD'),
+
 ];
