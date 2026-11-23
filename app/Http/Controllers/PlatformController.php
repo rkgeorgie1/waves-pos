@@ -47,9 +47,17 @@ class PlatformController extends Controller
         return back()->with('success', 'WhatsApp payment settings updated.');
     }
 
-    public function tenants(): View
+    public function tenants(Request $request): View
     {
-        $tenants = Tenant::orderBy('name')->get();
+        $search = trim((string) $request->query('q', ''));
+
+        $tenants = Tenant::query()
+            ->when($search !== '', function ($tenantsQuery) use ($search): void {
+                $tenantsQuery->whereHas('users', fn ($userQuery) => $userQuery->where('email', 'like', '%'.$search.'%'));
+            })
+            ->orderBy('name')
+            ->get();
+
         $subscriptions = Subscription::withoutGlobalScopes()->get()->keyBy('tenant_id');
 
         return view('platform.tenants', [
@@ -58,6 +66,7 @@ class PlatformController extends Controller
             'plans' => Plan::where('is_active', true)->orderBy('name')->get(),
             'userCounts' => User::query()->selectRaw('tenant_id, COUNT(*) as total')->groupBy('tenant_id')->pluck('total', 'tenant_id'),
             'productCounts' => Product::withoutGlobalScopes()->selectRaw('tenant_id, COUNT(*) as total')->groupBy('tenant_id')->pluck('total', 'tenant_id'),
+            'search' => $search,
         ]);
     }
 

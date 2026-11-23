@@ -25,6 +25,11 @@ class Tenant extends Model
         return $this->hasMany(Subscription::class);
     }
 
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function currentSubscription(): ?Subscription
     {
         return $this->subscriptions()->withoutGlobalScopes()->latest()->first();

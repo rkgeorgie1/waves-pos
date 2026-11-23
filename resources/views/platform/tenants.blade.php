@@ -6,6 +6,24 @@
     <a href="{{ route('platform.dashboard') }}" class="btn btn-outline-secondary btn-sm">Back to console</a>
 </div>
 
+<div class="card p-3 mb-3">
+    <form method="GET" action="{{ route('platform.tenants') }}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small fw-semibold text-muted mb-1">Search by user email</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="search" name="q" class="form-control" placeholder="name@example.com" value="{{ $search }}">
+                </div>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm px-3">Search</button>
+                <a href="{{ route('platform.tenants') }}" class="btn btn-outline-secondary btn-sm px-3">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
 <div class="card p-4">
     <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
@@ -21,7 +39,7 @@
                 </tr>
             </thead>
             <tbody>
-            @foreach($tenants as $tenant)
+            @forelse($tenants as $tenant)
                 @php
                     $subscription = $subscriptions->get($tenant->id);
                     $plan = $subscription ? $plans->firstWhere('id', $subscription->plan_id) : null;
@@ -70,7 +88,11 @@
                         </div>
                     </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No organizations match this email.</td>
+                </tr>
+            @endforelse
             </tbody>
         </table>
     </div>

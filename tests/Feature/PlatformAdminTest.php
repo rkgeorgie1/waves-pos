@@ -31,6 +31,29 @@ class PlatformAdminTest extends TestCase
             ->assertOk();
     }
 
+    public function test_platform_admin_can_search_organizations_by_user_email(): void
+    {
+        $matching = $this->tenant('email-match-org');
+        $other = $this->tenant('email-other-org');
+
+        User::factory()->create([
+            'tenant_id' => $matching->id,
+            'email' => 'merchant@example.com',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $other->id,
+            'email' => 'other@example.com',
+        ]);
+
+        $this->actingAs($this->user())
+            ->get(route('platform.tenants', ['q' => 'merchant@']))
+            ->assertOk()
+            ->assertSee('email-match-org')
+            ->assertDontSee('email-other-org')
+            ->assertSee('value="merchant@"', false);
+    }
+
     public function test_platform_console_remains_available_without_an_active_subscription(): void
     {
         $user = $this->user();
