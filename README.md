@@ -1,4 +1,4 @@
-# Airwaves POS
+# Waves POS
 
 Laravel-based ERP/POS for Airwaves Wholesalers (Kenya).
 

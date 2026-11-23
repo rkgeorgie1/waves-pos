@@ -19,7 +19,7 @@ class WhatsAppFloatTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Chat with admin on WhatsApp')
-            ->assertSee(WhatsApp::chatUrl('Hi, I would like to ask about payments for Airwaves POS.'), false);
+            ->assertSee(WhatsApp::chatUrl('Hi, I would like to ask about payments for Waves POS.'), false);
     }
 
     public function test_floating_chat_button_is_hidden_on_the_landing_page_when_not_configured(): void

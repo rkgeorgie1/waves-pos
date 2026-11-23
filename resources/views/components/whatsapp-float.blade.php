@@ -45,7 +45,7 @@
             }
         }
     </style>
-    <a href="{{ \App\WhatsApp::chatUrl('Hi, I would like to ask about payments for Airwaves POS.') }}"
+    <a href="{{ \App\WhatsApp::chatUrl('Hi, I would like to ask about payments for Waves POS.') }}"
        class="whatsapp-float"
        target="_blank"
        rel="noopener noreferrer"

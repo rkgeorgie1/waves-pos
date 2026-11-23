@@ -1,4 +1,4 @@
-const CACHE = 'airwaves-pos-v1';
+const CACHE = 'waves-pos-v1';
 const PRECACHE = ['/', '/manifest.json'];
 
 self.addEventListener('install', (e) => {

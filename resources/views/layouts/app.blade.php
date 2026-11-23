@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Airwaves POS')</title>
+    <title>@yield('title', 'Waves POS')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -256,7 +256,7 @@
                     @if($sidebarLogo)
                         <img src="{{ asset('storage/'.$sidebarLogo) }}" alt="Logo" style="max-height:32px; max-width:120px;">
                     @else
-                        Airwaves POS
+                        Waves POS
                     @endif
                 </span>
             </div>

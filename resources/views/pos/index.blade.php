@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'POS - Airwaves POS')
+@section('title', 'POS - Waves POS')
 
 @push('styles')
 <style>

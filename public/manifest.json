@@ -1,6 +1,6 @@
 {
-  "name": "Airwaves POS",
-  "short_name": "Airwaves POS",
+  "name": "Waves POS",
+  "short_name": "Waves POS",
   "description": "Point of sale and ERP system",
   "start_url": "/",
   "display": "standalone",
