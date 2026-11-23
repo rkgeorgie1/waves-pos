@@ -243,10 +243,50 @@
                 z-index: 50;
             }
         }
+        .pos-page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(243, 244, 246, 0.94);
+            color: #374151;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: opacity 0.18s ease, visibility 0.18s ease;
+        }
+        .pos-page-loader.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .pos-page-loader-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: pos-page-loader-spin 0.7s linear infinite;
+        }
+        @keyframes pos-page-loader-spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .pos-page-loader-spinner {
+                animation-duration: 1.6s;
+            }
+        }
     </style>
     @stack('styles')
 </head>
 <body>
+<div id="posPageLoader" class="pos-page-loader" role="status" aria-live="polite" aria-label="Loading page">
+    <span class="pos-page-loader-spinner" aria-hidden="true"></span>
+    <span>Loading…</span>
+</div>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-2 sidebar p-0" id="appSidebar">
@@ -543,6 +583,89 @@
                 // Storage may be unavailable in private browsing.
             }
         });
+    })();
+
+    (function () {
+        const loader = document.getElementById('posPageLoader');
+
+        if (! loader) {
+            return;
+        }
+
+        function showLoader() {
+            loader.classList.remove('is-hidden');
+            loader.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideLoader() {
+            loader.classList.add('is-hidden');
+            loader.setAttribute('aria-hidden', 'true');
+        }
+
+        function shouldSkipLink(link) {
+            if (! (link instanceof HTMLAnchorElement)) {
+                return true;
+            }
+
+            if (link.hasAttribute('data-no-loader') || link.hasAttribute('download')) {
+                return true;
+            }
+
+            if (link.target && link.target !== '_self') {
+                return true;
+            }
+
+            const href = link.getAttribute('href') || '';
+
+            if (! href || href.startsWith('#') || /^(?:javascript|mailto|tel):/i.test(href)) {
+                return true;
+            }
+
+            try {
+                return new URL(link.href, window.location.href).origin !== window.location.origin;
+            } catch (error) {
+                return true;
+            }
+        }
+
+        document.addEventListener('click', function (event) {
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                return;
+            }
+
+            const link = event.target.closest ? event.target.closest('a') : null;
+
+            if (shouldSkipLink(link)) {
+                return;
+            }
+
+            showLoader();
+        });
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+
+            if (! (form instanceof HTMLFormElement) || form.hasAttribute('data-no-loader')) {
+                return;
+            }
+
+            if (form.target && form.target !== '_self') {
+                return;
+            }
+
+            showLoader();
+        });
+
+        window.addEventListener('load', hideLoader);
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                hideLoader();
+            }
+        });
+
+        if (document.readyState === 'complete') {
+            hideLoader();
+        }
     })();
 </script>
 @stack('scripts')
