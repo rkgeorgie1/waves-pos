@@ -546,6 +546,5 @@
     })();
 </script>
 @stack('scripts')
-<x-whatsapp-float />
 </body>
 </html>

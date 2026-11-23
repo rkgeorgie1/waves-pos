@@ -333,6 +333,5 @@
                 </main>
             </div>
         </div>
-        <x-whatsapp-float />
     </body>
 </html>
