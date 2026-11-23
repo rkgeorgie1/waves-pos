@@ -40,6 +40,7 @@ class MarketingController extends Controller
             'currency' => strtoupper((string) $currency),
             'whatsappConfigured' => $whatsappConfigured,
             'whatsappLinks' => $whatsappLinks,
+            'trialDays' => (int) config('app.trial_days'),
         ]);
     }
 }

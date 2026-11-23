@@ -16,12 +16,14 @@ final class TenantProvisioner
     public function provision(string $name): Tenant
     {
         return DB::transaction(function () use ($name): Tenant {
+            $trialEndsAt = now()->addDays((int) config('app.trial_days'));
+
             $tenant = Tenant::create([
                 'name' => $name,
                 'slug' => $this->uniqueSlug($name),
                 'status' => 'active',
                 'subscription_status' => 'trialing',
-                'trial_ends_at' => now()->addDays(14),
+                'trial_ends_at' => $trialEndsAt,
             ]);
 
             app(TenantContext::class)->set($tenant);
@@ -38,7 +40,7 @@ final class TenantProvisioner
                 'status' => 'trialing',
                 'billing_interval' => 'monthly',
                 'current_period_start' => now(),
-                'trial_ends_at' => now()->addDays(14),
+                'trial_ends_at' => $trialEndsAt,
             ]);
 
             return $tenant;

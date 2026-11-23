@@ -18,6 +18,9 @@ class MarketingPageTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Start free trial')
+            ->assertSee('Every account starts with a 5-day trial.')
+            ->assertDontSee('14-day')
+            ->assertDontSee('14 days')
             ->assertSee(route('register'), false)
             ->assertSee(route('login'), false)
             ->assertSee('Free')

@@ -79,7 +79,7 @@
                         <h1 class="text-3xl font-bold leading-tight tracking-tight sm:text-4xl">POS, inventory, and reporting for retail shops and wholesalers</h1>
 
                         <p class="mt-5 text-base leading-7 text-slate-600">
-                            Record sales, track stock across warehouses, manage suppliers and purchases, and run reports from one account. Every new account gets 14 days free.
+                            Record sales, track stock across warehouses, manage suppliers and purchases, and run reports from one account. Every new account gets {{ $trialDays }} days free.
                         </p>
 
                         <div class="mt-7 flex flex-wrap items-center gap-4">
@@ -146,7 +146,7 @@
 
                 <section id="pricing" class="mx-auto max-w-6xl px-5 py-16 sm:px-8">
                     <h2 class="text-2xl font-bold tracking-tight">Plans</h2>
-                    <p class="mt-2 text-sm text-slate-600">Prices in {{ $currency }}. Every account starts with a 14-day trial.</p>
+                    <p class="mt-2 text-sm text-slate-600">Prices in {{ $currency }}. Every account starts with a {{ $trialDays }}-day trial.</p>
 
                     <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         @forelse ($plans as $plan)
@@ -212,7 +212,7 @@
                         <div class="divide-y divide-slate-200 border-y border-slate-200">
                             <details class="group py-4" open>
                                 <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">How does the free trial work?<span class="text-slate-500 transition group-open:rotate-45" aria-hidden="true">+</span></summary>
-                                <p class="mt-2 text-sm leading-6 text-slate-600">Your organization has full access for 14 days. You can add products, set up warehouses, and invite staff before choosing a plan.</p>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">Your organization has full access for {{ $trialDays }} days. You can add products, set up warehouses, and invite staff before choosing a plan.</p>
                             </details>
                             <details class="group py-4">
                                 <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold">How do I pay for a plan?<span class="text-slate-500 transition group-open:rotate-45" aria-hidden="true">+</span></summary>
@@ -234,7 +234,7 @@
                     <div class="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-12 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                         <div>
                             <h2 class="text-xl font-bold tracking-tight">Get started</h2>
-                            <p class="mt-1 text-sm text-slate-600">Create an account and start your 14-day trial.</p>
+                            <p class="mt-1 text-sm text-slate-600">Create an account and start your {{ $trialDays }}-day trial.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-4">
                             @auth
