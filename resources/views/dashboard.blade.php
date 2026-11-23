@@ -6,22 +6,23 @@
     .upos-home-card {
         background: #ffffff;
         border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 18px 20px;
+        border-radius: 14px;
+        padding: 16px 18px;
+        min-height: 96px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        transition: all 0.2s ease;
+        transition: box-shadow 0.2s ease;
     }
     .upos-home-card:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
     .upos-icon-circle {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         border-radius: 9999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         flex-shrink: 0;
     }
     .circle-sky { background: #e0f2fe; color: #0284c7; }
@@ -29,16 +30,28 @@
     .circle-amber { background: #fef3c7; color: #d97706; }
     .circle-red { background: #fee2e2; color: #dc2626; }
     .upos-metric-label {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         font-weight: 500;
         color: #6b7280;
         margin-bottom: 2px;
+        white-space: nowrap;
     }
     .upos-metric-value {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: #111827;
         font-variant-numeric: tabular-nums;
+    }
+    .upos-group-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        margin: 0 0 8px 2px;
+    }
+    .upos-chart-wrap {
+        height: 230px;
     }
     .upos-section-card {
         background: #ffffff;
@@ -104,8 +117,9 @@
     </div>
 </div>
 
-<!-- Row 1: 4 Sales & Profit KPI Cards -->
-<div class="row g-3 mb-3">
+<!-- Sales KPI cards -->
+<p class="upos-group-label">Sales overview</p>
+<div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
         <div class="upos-home-card d-flex align-items-center gap-3 h-100">
             <div class="upos-icon-circle circle-sky">
@@ -155,7 +169,8 @@
     </div>
 </div>
 
-<!-- Row 2: 4 Purchases & Expense KPI Cards -->
+<!-- Purchases and expense KPI cards -->
+<p class="upos-group-label">Purchases &amp; expenses</p>
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
         <div class="upos-home-card d-flex align-items-center gap-3 h-100">
@@ -206,36 +221,41 @@
     </div>
 </div>
 
-<!-- Row 3: Sales Last 30 Days Chart -->
-<div class="upos-section-card mb-4">
-    <div class="upos-section-header">
-        <h6 class="upos-section-title">
-            <i class="bi bi-bar-chart-line text-primary"></i> Sales Last 30 Days
-        </h6>
+<!-- Sales charts -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-6">
+        <div class="upos-section-card h-100">
+            <div class="upos-section-header">
+                <h6 class="upos-section-title">
+                    <i class="bi bi-bar-chart-line text-primary"></i> Sales Last 30 Days
+                </h6>
+            </div>
+            <div class="p-3 p-lg-4">
+                <div class="upos-chart-wrap">
+                    <canvas id="sales30DaysChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="p-4">
-        <div style="height: 280px;">
-            <canvas id="sales30DaysChart"></canvas>
+
+    <div class="col-xl-6">
+        <div class="upos-section-card h-100">
+            <div class="upos-section-header">
+                <h6 class="upos-section-title">
+                    <i class="bi bi-graph-up text-primary"></i> Sales Current Financial Year
+                </h6>
+            </div>
+            <div class="p-3 p-lg-4">
+                <div class="upos-chart-wrap">
+                    <canvas id="salesFyChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Row 4: Sales Current Financial Year Chart -->
-<div class="upos-section-card mb-4">
-    <div class="upos-section-header">
-        <h6 class="upos-section-title">
-            <i class="bi bi-graph-up text-primary"></i> Sales Current Financial Year
-        </h6>
-    </div>
-    <div class="p-4">
-        <div style="height: 260px;">
-            <canvas id="salesFyChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Row 5: Payment Dues & Stock Alert Tables (2x2 Grid) -->
-<div class="row g-4">
+<!-- Payment dues -->
+<div class="row g-4 mb-4">
     <!-- Sales Payment Due -->
     <div class="col-lg-6">
         <div class="upos-section-card h-100">
@@ -315,9 +335,12 @@
             </div>
         </div>
     </div>
+</div>
 
+<!-- Inventory and sales activity -->
+<div class="row g-4">
     <!-- Product Stock Alert -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="upos-section-card h-100">
             <div class="upos-section-header">
                 <h6 class="upos-section-title">
@@ -353,7 +376,7 @@
     </div>
 
     <!-- Pending Shipments / Recent Sales -->
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="upos-section-card h-100">
             <div class="upos-section-header">
                 <h6 class="upos-section-title">
